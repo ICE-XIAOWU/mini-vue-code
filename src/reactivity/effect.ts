@@ -1,9 +1,10 @@
 class ReactiveEffect {
   private _fn: Function
  
-  constructor(fn) {
+  constructor(fn, public scheduler?: Function) {
     this._fn = fn
   }
+
   run() {
     // 1. 保存当前的effect
     activeEffect = this;
@@ -38,13 +39,17 @@ export function trigger(target, key) {
   const deps = depsMap.get(key);
 
   for (const effect of deps) {
-    effect.run();
+    if(effect.scheduler) {
+      effect.scheduler();
+    } else {
+      effect.run();
+    }
   }
 }
 
 let activeEffect;
-export function effect(fn) {
-  const _effect = new ReactiveEffect(fn);
+export function effect(fn, options: any = {}) {
+  const _effect = new ReactiveEffect(fn, options.scheduler);
 
   // 1. 进来先执行一次
   _effect.run();
